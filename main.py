@@ -1,36 +1,22 @@
-import os
 import time
 import speech_recognition as sr
-import pygame.font
+import gradio as gr
 
 class Jarvis:
     def __init__(self):
-        pygame.font.init()
-        self.screen = pygame.display.set_mode((800, 600))
-        pygame.display.set_caption("Jarvis")
-        self.font = pygame.font.SysFont(None, 36)
-
-    def display_text(self, text):
-        text_surface = self.font.render(text, True, (255, 255, 255))
-        self.screen.fill((0, 0, 0))
-        self.screen.blit(text_surface, (10, 10))
-        pygame.display.flip()
+        pass
 
     def get_audio(self):
         r = sr.Recognizer()
 
         with sr.Microphone() as source:
-            print("Say something...")
             try:
                 audio = r.listen(source, timeout=5)
                 words_said = r.recognize_google(audio)
-                print("You said:", words_said)
                 return words_said.lower()
             except sr.UnknownValueError:
-                print("Speech Recognition could not understand audio.")
                 return ""
             except sr.RequestError as e:
-                print(f"Could not request results from Google Speech Recognition service; {e}")
                 return ""
 
     def run_jarvis(self):
@@ -40,22 +26,17 @@ class Jarvis:
             try:
                 words_said = self.get_audio()
 
-                for event in pygame.event.get():
-                    if event.type == pygame.QUIT:
-                        running = False
-
                 if words_said:
                     response = self.generate_response(words_said)
                     if response:
-                        self.display_text(response)
+                        return response
 
             except Exception as e:
                 print(f"An error occurred: {e}")
 
-        pygame.quit()
-
     def generate_response(self, words_said):
         responses = {
+            
             "how are you": "I'm fine thank you, and you?",
             "stop": "Goodbye! Take care.",
             "tell me a joke": "Why don't scientists trust atoms? Because they make up everything!",
@@ -260,9 +241,15 @@ class Jarvis:
             # Add more responses as needed
         }
 
-        return responses.get(words_said, "I didn't understand that.")
+        return responses.get(words_said, "I'm sorry, I didn't understand that.")
 
-if __name__ == "__main__":
-    jarvis = Jarvis()
-    jarvis.run_jarvis()
+def jarvis_response(message, history):
+    jarvis_instance = Jarvis()
+    words_said = message.lower()
+    response = jarvis_instance.generate_response(words_said)
+    return response
+
+demo = gr.ChatInterface(jarvis_response)
+
+demo.launch(share=True)
 
